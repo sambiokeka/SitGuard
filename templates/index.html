@@ -143,7 +143,8 @@
         
         .stats-container {
             display: grid;
-            grid-template-columns: 1fr;
+            /* ATUALIZADO: Duas colunas */
+            grid-template-columns: 1fr 1fr; 
             gap: 15px;
             margin-top: 30px;
         }
@@ -265,8 +266,9 @@
                 font-size: 2.8rem;
             }
             
+            /* ATUALIZADO: De volta para uma coluna em telas pequenas */
             .stats-container {
-                grid-template-columns: 1fr;
+                grid-template-columns: 1fr; 
             }
         }
     </style>
@@ -304,6 +306,10 @@
                 <div id="alerts-today" class="stat-value">0</div>
                 <div class="stat-label">Alertas Hoje</div>
             </div>
+            <div class="stat-card">
+                <div id="time-good" class="stat-value">0min 0s</div>
+                <div class="stat-label">Tempo em Postura Ideal</div>
+            </div>
         </div>
         
         <div id="connection-status" class="connection-status disconnected">
@@ -326,7 +332,8 @@
         const progressBar = document.getElementById('progress-bar');
         const connectionStatus = document.getElementById('connection-status');
         const connectionText = document.getElementById('connection-text');
-        const timeGoodElement = document.getElementById('time-good');
+        // AGORA ESTE ELEMENTO EXISTE NO HTML
+        const timeGoodElement = document.getElementById('time-good'); 
         const alertsTodayElement = document.getElementById('alerts-today');
         
         // 1. Conecta ao servidor WebSocket (Flask)
@@ -348,18 +355,23 @@
             // Atualiza a distância
             distanceValue.textContent = data.distancia_cm.toFixed(1);
             
-            // Atualiza a barra de progresso (assumindo que a distância ideal é entre 40-70cm)
-            updateProgressBar(data.distancia_cm);
-            
             // Atualiza o Status e a cor
             if (data.status === 'ok') {
                 updatePostureStatus('ok', 'Postura Correta!', 'fas fa-check-circle');
                 startGoodPostureTimer();
+                updateProgressBar(data.distancia_cm, 'ok'); // Passa o status
             } else if (data.status === 'ruim') {
                 updatePostureStatus('ruim', 'Ajuste sua Postura!', 'fas fa-exclamation-triangle');
                 stopGoodPostureTimer();
                 alertsToday++;
                 alertsTodayElement.textContent = alertsToday;
+                updateProgressBar(data.distancia_cm, 'ruim'); // Passa o status
+            
+            // --- BLOCO NOVO AQUI ---
+            } else if (data.status === 'ausente') { 
+                updatePostureStatus('conectando', 'Usuário Ausente', 'fas fa-user-clock'); // Reusa o estilo amarelo
+                stopGoodPostureTimer();
+                updateProgressBar(data.distancia_cm, 'ausente'); // Passa o status
             }
         });
         
@@ -390,22 +402,19 @@
             connectionText.textContent = text;
         }
         
-        function updateProgressBar(distance) {
+        // --- FUNÇÃO ATUALIZADA ---
+        function updateProgressBar(distance, status) {
             // Mapeia a distância para a barra de progresso (0-100%)
-            // Assumindo que:
-            // - Muito perto: 0-30cm = 0-30%
-            // - Ideal: 40-70cm = 40-70%
-            // - Muito longe: 80cm+ = 80-100%
             let progress = Math.min(Math.max(distance, 0), 100);
             progressBar.style.width = `${progress}%`;
             
-            // Muda a cor baseada na distância
-            if (distance < 40) {
+            // Muda a cor baseada no STATUS
+            if (status === 'ruim') {
                 progressBar.style.background = 'linear-gradient(90deg, #ef476f, #f78c6b)';
-            } else if (distance >= 40 && distance <= 70) {
+            } else if (status === 'ok') {
                 progressBar.style.background = 'linear-gradient(90deg, #06d6a0, #118ab2)';
-            } else {
-                progressBar.style.background = 'linear-gradient(90deg, #f78c6b, #ef476f)';
+            } else if (status === 'ausente') {
+                progressBar.style.background = 'var(--gray)'; // Cor cinza neutra
             }
         }
         
@@ -428,7 +437,10 @@
         function updateTimeDisplay() {
             const minutes = Math.floor(goodPostureTime / 60);
             const seconds = goodPostureTime % 60;
-            timeGoodElement.textContent = `${minutes}min ${seconds}s`;
+            // Verifica se o elemento existe antes de tentar usá-lo
+            if (timeGoodElement) { 
+                timeGoodElement.textContent = `${minutes}min ${seconds}s`;
+            }
         }
         
         // Inicialização
