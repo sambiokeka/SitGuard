@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Guardião da Postura</title>
+    <title>Dashboard - SitGuard</title>
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -143,7 +143,6 @@
         
         .stats-container {
             display: grid;
-            /* ATUALIZADO: Duas colunas */
             grid-template-columns: 1fr 1fr; 
             gap: 15px;
             margin-top: 30px;
@@ -192,7 +191,6 @@
             background: var(--gray);
         }
         
-        /* Estados de postura */
         .status-ok .status-icon {
             color: var(--success);
         }
@@ -235,7 +233,6 @@
             background: var(--danger);
         }
         
-        /* Animações */
         @keyframes pulse {
             0% { transform: scale(1); }
             50% { transform: scale(1.1); }
@@ -248,7 +245,6 @@
             75% { transform: translateX(5px); }
         }
         
-        /* Responsividade */
         @media (max-width: 480px) {
             .dashboard {
                 padding: 30px 20px;
@@ -266,7 +262,6 @@
                 font-size: 2.8rem;
             }
             
-            /* ATUALIZADO: De volta para uma coluna em telas pequenas */
             .stats-container {
                 grid-template-columns: 1fr; 
             }
@@ -319,7 +314,6 @@
     </div>
 
     <script>
-        // Estado inicial
         let goodPostureTime = 0;
         let alertsToday = 0;
         let goodPostureTimer;
@@ -332,50 +326,42 @@
         const progressBar = document.getElementById('progress-bar');
         const connectionStatus = document.getElementById('connection-status');
         const connectionText = document.getElementById('connection-text');
-        // AGORA ESTE ELEMENTO EXISTE NO HTML
         const timeGoodElement = document.getElementById('time-good'); 
         const alertsTodayElement = document.getElementById('alerts-today');
-        
-        // 1. Conecta ao servidor WebSocket (Flask)
+
         const socket = io();
-        
-        // 2. Ouve o evento 'connect'
+
         socket.on('connect', () => {
             console.log('Conectado ao servidor WebSocket!');
             updateConnectionStatus(true, 'Conectado');
-            
-            // Atualiza o status para aguardando dados
+
             updatePostureStatus('conectando', 'Aguardando dados...', 'fas fa-check-circle');
         });
         
-        // 3. Ouve o evento 'dados_postura' (que o app.py envia)
         socket.on('dados_postura', (data) => {
             console.log('Dados recebidos:', data);
-            
-            // Atualiza a distância
+
             distanceValue.textContent = data.distancia_cm.toFixed(1);
-            
-            // Atualiza o Status e a cor
+
             if (data.status === 'ok') {
                 updatePostureStatus('ok', 'Postura Correta!', 'fas fa-check-circle');
                 startGoodPostureTimer();
-                updateProgressBar(data.distancia_cm, 'ok'); // Passa o status
+                updateProgressBar(data.distancia_cm, 'ok'); 
             } else if (data.status === 'ruim') {
                 updatePostureStatus('ruim', 'Ajuste sua Postura!', 'fas fa-exclamation-triangle');
                 stopGoodPostureTimer();
                 alertsToday++;
                 alertsTodayElement.textContent = alertsToday;
-                updateProgressBar(data.distancia_cm, 'ruim'); // Passa o status
-            
-            // --- BLOCO NOVO AQUI ---
+                updateProgressBar(data.distancia_cm, 'ruim'); 
+
             } else if (data.status === 'ausente') { 
-                updatePostureStatus('conectando', 'Usuário Ausente', 'fas fa-user-clock'); // Reusa o estilo amarelo
+                updatePostureStatus('conectando', 'Usuário Ausente', 'fas fa-user-clock'); 
                 stopGoodPostureTimer();
-                updateProgressBar(data.distancia_cm, 'ausente'); // Passa o status
+                updateProgressBar(data.distancia_cm, 'ausente');
             }
         });
         
-        // 4. Ouve o evento 'disconnect'
+
         socket.on('disconnect', () => {
             console.log('Desconectado do servidor WebSocket.');
             updateConnectionStatus(false, 'Desconectado');
@@ -385,13 +371,10 @@
         
         // Funções auxiliares
         function updatePostureStatus(status, text, iconClass) {
-            // Remove todas as classes de status
             statusContainer.classList.remove('status-ok', 'status-ruim', 'status-conectando');
             
-            // Adiciona a classe correspondente
             statusContainer.classList.add(`status-${status}`);
             
-            // Atualiza texto e ícone
             statusText.textContent = text;
             statusIcon.innerHTML = `<i class="${iconClass}"></i>`;
         }
@@ -401,20 +384,18 @@
             connectionStatus.classList.add(connected ? 'connected' : 'disconnected');
             connectionText.textContent = text;
         }
-        
-        // --- FUNÇÃO ATUALIZADA ---
+
         function updateProgressBar(distance, status) {
-            // Mapeia a distância para a barra de progresso (0-100%)
+
             let progress = Math.min(Math.max(distance, 0), 100);
             progressBar.style.width = `${progress}%`;
-            
-            // Muda a cor baseada no STATUS
+
             if (status === 'ruim') {
                 progressBar.style.background = 'linear-gradient(90deg, #ef476f, #f78c6b)';
             } else if (status === 'ok') {
                 progressBar.style.background = 'linear-gradient(90deg, #06d6a0, #118ab2)';
             } else if (status === 'ausente') {
-                progressBar.style.background = 'var(--gray)'; // Cor cinza neutra
+                progressBar.style.background = 'var(--gray)'; 
             }
         }
         
@@ -437,13 +418,11 @@
         function updateTimeDisplay() {
             const minutes = Math.floor(goodPostureTime / 60);
             const seconds = goodPostureTime % 60;
-            // Verifica se o elemento existe antes de tentar usá-lo
             if (timeGoodElement) { 
                 timeGoodElement.textContent = `${minutes} min ${seconds}s`;
             }
         }
-        
-        // Inicialização
+
         updateTimeDisplay();
         alertsTodayElement.textContent = alertsToday;
     </script>
