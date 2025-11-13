@@ -26,11 +26,13 @@ Um projeto completo para monitorar a postura de quem está sentado à mesa usand
 ---
 
 ## Visão Geral
-O projeto mede a distância do usuário até a mesa com o HC-SR04, classifica a postura em três estados ("ok", "ruim", "ausente"), entrega feedback local (LED verde para ok; LED vermelho + buzzer para ruim; LCD mostra texto) e publica um JSON via MQTT para um broker que o backend consome e retransmite ao frontend via WebSockets.
+
 
 - Wokwi
 
 <img width="531" height="501" alt="image" src="https://github.com/user-attachments/assets/7a2e3f4b-0272-4b3c-aaac-ff192fd86643" />
+
+O projeto mede a distância do usuário até a mesa com o HC-SR04, classifica a postura em três estados ("ok", "ruim", "ausente"), entrega feedback local (LED verde para ok; LED vermelho + buzzer para ruim; LCD mostra texto) e publica um JSON via MQTT para um broker que o backend consome e retransmite ao frontend via WebSockets.
 
 - Frontend
 
