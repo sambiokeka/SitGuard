@@ -136,29 +136,19 @@ git clone https://github.com/sambiokeka/SitGuard.git
 cd SitGuard
 ```
 
-- É recomendado criar um virtualenv:
-```bash
-python3 -m venv venv
-source venv/bin/activate
-```
-
 - Instale as dependências:
 ```bash
 pip install -r requirements.txt
 ```
-(se não houver `requirements.txt`, instale manualmente: `pip install flask flask-socketio paho-mqtt eventlet`)
+(se não funcionar instale manualmente: `pip install flask flask-socketio paho-mqtt eventlet`)
 
-- Ajuste as configurações no `app.py` conforme necessário:
+- Ajuste as configurações no `app.py` se necessário:
   - Endereço do broker MQTT (`mqtt_broker = "localhost"` ou IP da VM).
   - Porta do Flask (p.ex. 8080).
 
 - Rode o servidor Flask:
 ```bash
 python3 app.py
-```
-Para produção, use gunicorn + eventlet:
-```bash
-gunicorn -k eventlet -w 1 app:app --bind 0.0.0.0:8080
 ```
 
 - Firewall / NSG (Azure): No Portal do Azure, abra o Grupo de Segurança de Rede (NSG) da sua VM e adicione regras de entrada para:
@@ -170,7 +160,7 @@ gunicorn -k eventlet -w 1 app:app --bind 0.0.0.0:8080
 ```
 http://SEU_IP_AQUI:8080
 ```
-- A página `index.html` deve carregar e se conectar automaticamente via Socket.IO, exibindo os dados da sua simulação Wokwi em tempo real.
+- A página `index.html` deve carregar e se conectar automaticamente via Socket.IO, exibindo os dados da simulação Wokwi em tempo real.
 
 ---
 
@@ -188,7 +178,7 @@ payload: {"status":"ruim","distancia_cm":22.3}
 
 ---
 
-## Estrutura sugerida do repositório
+## Estrutura do repositório
 - codigo.ino           → Codigo do wokwi
 - diagram.json         → Diagrama de montagem para o wokwi
 - app.py               → Aqui tem o codigo que deve ser rodado na VM
