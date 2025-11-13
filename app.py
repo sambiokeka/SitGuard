@@ -54,4 +54,4 @@ if __name__ == '__main__':
     # Roda o servidor Flask/SocketIO
     # '0.0.0.0' torna o servidor visível publicamente
     # 'port=80' é a porta HTTP padrão
-    socketio.run(app, host='0.0.0.0', port=80, debug=True, allow_unsafe_werkzeug=True)
+    socketio.run(app, host='0.0.0.0', port=8080, debug=True, allow_unsafe_werkzeug=True)
