@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Guardião da Postura</title>
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4361ee;
+            --success: #06d6a0;
+            --danger: #ef476f;
+            --warning: #ffd166;
+            --dark: #2b2d42;
+            --light: #f8f9fa;
+            --gray: #adb5bd;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .dashboard {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 500px;
+            padding: 40px 30px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        .dashboard:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+        }
+        
+        .header {
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            color: var(--dark);
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .header p {
+            color: var(--gray);
+            font-size: 1rem;
+        }
+        
+        .status-container {
+            position: relative;
+            margin: 30px 0;
+            padding: 30px 20px;
+            border-radius: 15px;
+            background: white;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+        
+        .status-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            transition: all 0.5s ease;
+        }
+        
+        .status-text {
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+        }
+        
+        .distance-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 25px 0;
+        }
+        
+        .distance-value {
+            font-size: 3.5rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 5px;
+            transition: all 0.3s ease;
+        }
+        
+        .distance-label {
+            font-size: 1.1rem;
+            color: var(--gray);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .progress-container {
+            width: 100%;
+            height: 12px;
+            background: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 25px 0;
+            position: relative;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            width: 50%;
+            background: linear-gradient(90deg, var(--success), var(--primary));
+            border-radius: 10px;
+            transition: width 0.5s ease, background 0.5s ease;
+        }
+        
+        .progress-labels {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-top: 8px;
+            font-size: 0.85rem;
+            color: var(--gray);
+        }
+        
+        .stats-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--gray);
+        }
+        
+        .connection-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: #e9ecef;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .connection-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--gray);
+        }
+        
+        /* Estados de postura */
+        .status-ok .status-icon {
+            color: var(--success);
+        }
+        
+        .status-ok .status-text {
+            color: var(--success);
+        }
+        
+        .status-ok .status-container {
+            border: 2px solid rgba(6, 214, 160, 0.2);
+        }
+        
+        .status-ruim .status-icon {
+            color: var(--danger);
+            animation: pulse 1.5s infinite;
+        }
+        
+        .status-ruim .status-text {
+            color: var(--danger);
+        }
+        
+        .status-ruim .status-container {
+            border: 2px solid rgba(239, 71, 111, 0.2);
+            animation: shake 0.5s ease;
+        }
+        
+        .status-conectando .status-icon {
+            color: var(--warning);
+        }
+        
+        .status-conectando .status-text {
+            color: var(--warning);
+        }
+        
+        .connected .connection-dot {
+            background: var(--success);
+        }
+        
+        .disconnected .connection-dot {
+            background: var(--danger);
+        }
+        
+        /* Animações */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        
+        /* Responsividade */
+        @media (max-width: 480px) {
+            .dashboard {
+                padding: 30px 20px;
+            }
+            
+            .header h1 {
+                font-size: 1.8rem;
+            }
+            
+            .status-text {
+                font-size: 1.8rem;
+            }
+            
+            .distance-value {
+                font-size: 2.8rem;
+            }
+            
+            .stats-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <div class="header">
+            <h1><i class="fas fa-user-shield"></i> SitGuard</h1>
+            <p>Monitoramento inteligente para sua saúde postural</p>
+        </div>
+        
+        <div id="status-container" class="status-container status-conectando">
+            <div id="status-icon" class="status-icon">
+                <i class="fas fa-spinner fa-spin"></i>
+            </div>
+            <div id="status-text" class="status-text">Conectando...</div>
+        </div>
+        
+        <div class="distance-container">
+            <div id="distance-value" class="distance-value">--</div>
+            <div class="distance-label">Distância do Sensor</div>
+        </div>
+        
+        <div class="progress-container">
+            <div id="progress-bar" class="progress-bar"></div>
+            <div class="progress-labels">
+                <span>Muito Próximo</span>
+                <span>Distância Ideal</span>
+                <span>Muito Longe</span>
+            </div>
+        </div>
+        
+        <div class="stats-container">
+            <div class="stat-card">
+                <div id="time-good" class="stat-value">0min</div>
+                <div class="stat-label">Tempo Postura Correta</div>
+            </div>
+            <div class="stat-card">
+                <div id="alerts-today" class="stat-value">0</div>
+                <div class="stat-label">Alertas Hoje</div>
+            </div>
+        </div>
+        
+        <div id="connection-status" class="connection-status disconnected">
+            <div class="connection-dot"></div>
+            <span id="connection-text">Desconectado</span>
+        </div>
+    </div>
+
+    <script>
+        // Estado inicial
+        let goodPostureTime = 0;
+        let alertsToday = 0;
+        let goodPostureTimer;
+        
+        // Elementos do DOM
+        const statusContainer = document.getElementById('status-container');
+        const statusIcon = document.getElementById('status-icon');
+        const statusText = document.getElementById('status-text');
+        const distanceValue = document.getElementById('distance-value');
+        const progressBar = document.getElementById('progress-bar');
+        const connectionStatus = document.getElementById('connection-status');
+        const connectionText = document.getElementById('connection-text');
+        const timeGoodElement = document.getElementById('time-good');
+        const alertsTodayElement = document.getElementById('alerts-today');
+        
+        // 1. Conecta ao servidor WebSocket (Flask)
+        const socket = io();
+        
+        // 2. Ouve o evento 'connect'
+        socket.on('connect', () => {
+            console.log('Conectado ao servidor WebSocket!');
+            updateConnectionStatus(true, 'Conectado');
+            
+            // Atualiza o status para aguardando dados
+            updatePostureStatus('conectando', 'Aguardando dados...', 'fas fa-check-circle');
+        });
+        
+        // 3. Ouve o evento 'dados_postura' (que o app.py envia)
+        socket.on('dados_postura', (data) => {
+            console.log('Dados recebidos:', data);
+            
+            // Atualiza a distância
+            distanceValue.textContent = data.distancia_cm.toFixed(1);
+            
+            // Atualiza a barra de progresso (assumindo que a distância ideal é entre 40-70cm)
+            updateProgressBar(data.distancia_cm);
+            
+            // Atualiza o Status e a cor
+            if (data.status === 'ok') {
+                updatePostureStatus('ok', 'Postura Correta!', 'fas fa-check-circle');
+                startGoodPostureTimer();
+            } else if (data.status === 'ruim') {
+                updatePostureStatus('ruim', 'Ajuste sua Postura!', 'fas fa-exclamation-triangle');
+                stopGoodPostureTimer();
+                alertsToday++;
+                alertsTodayElement.textContent = alertsToday;
+            }
+        });
+        
+        // 4. Ouve o evento 'disconnect'
+        socket.on('disconnect', () => {
+            console.log('Desconectado do servidor WebSocket.');
+            updateConnectionStatus(false, 'Desconectado');
+            updatePostureStatus('conectando', 'Conexão Perdida', 'fas fa-unlink');
+            stopGoodPostureTimer();
+        });
+        
+        // Funções auxiliares
+        function updatePostureStatus(status, text, iconClass) {
+            // Remove todas as classes de status
+            statusContainer.classList.remove('status-ok', 'status-ruim', 'status-conectando');
+            
+            // Adiciona a classe correspondente
+            statusContainer.classList.add(`status-${status}`);
+            
+            // Atualiza texto e ícone
+            statusText.textContent = text;
+            statusIcon.innerHTML = `<i class="${iconClass}"></i>`;
+        }
+        
+        function updateConnectionStatus(connected, text) {
+            connectionStatus.classList.remove('connected', 'disconnected');
+            connectionStatus.classList.add(connected ? 'connected' : 'disconnected');
+            connectionText.textContent = text;
+        }
+        
+        function updateProgressBar(distance) {
+            // Mapeia a distância para a barra de progresso (0-100%)
+            // Assumindo que:
+            // - Muito perto: 0-30cm = 0-30%
+            // - Ideal: 40-70cm = 40-70%
+            // - Muito longe: 80cm+ = 80-100%
+            let progress = Math.min(Math.max(distance, 0), 100);
+            progressBar.style.width = `${progress}%`;
+            
+            // Muda a cor baseada na distância
+            if (distance < 40) {
+                progressBar.style.background = 'linear-gradient(90deg, #ef476f, #f78c6b)';
+            } else if (distance >= 40 && distance <= 70) {
+                progressBar.style.background = 'linear-gradient(90deg, #06d6a0, #118ab2)';
+            } else {
+                progressBar.style.background = 'linear-gradient(90deg, #f78c6b, #ef476f)';
+            }
+        }
+        
+        function startGoodPostureTimer() {
+            if (!goodPostureTimer) {
+                goodPostureTimer = setInterval(() => {
+                    goodPostureTime++;
+                    updateTimeDisplay();
+                }, 1000);
+            }
+        }
+        
+        function stopGoodPostureTimer() {
+            if (goodPostureTimer) {
+                clearInterval(goodPostureTimer);
+                goodPostureTimer = null;
+            }
+        }
+        
+        function updateTimeDisplay() {
+            const minutes = Math.floor(goodPostureTime / 60);
+            const seconds = goodPostureTime % 60;
+            timeGoodElement.textContent = `${minutes}min ${seconds}s`;
+        }
+        
+        // Inicialização
+        updateTimeDisplay();
+        alertsTodayElement.textContent = alertsToday;
+    </script>
+</body>
+</html>
