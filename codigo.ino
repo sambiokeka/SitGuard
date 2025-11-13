@@ -8,7 +8,7 @@ const char* ssid = "Wokwi-GUEST";
 const char* password = ""; 
 
 // --- Configuração do MQTT ---
-const char* mqtt_server = "20.97.192.88"; 
+const char* mqtt_server = "20.97.192.88";  // Professor troque pelo seu servidor
 const char* mqtt_topic = "fiap/gs/postura";    
 
 WiFiClient espClient;
