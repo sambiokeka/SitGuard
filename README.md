@@ -97,7 +97,7 @@ distancia_cm: número (cm)
 
 - No código `.ino` altere a variável `mqtt_server`:
 ```cpp
-const char* mqtt_server = "SEU_IP_AQUI"; // IP público da sua VM Azure
+const char* mqtt_server = "SEU_IP_AQUI"; // IP da sua VM
 ```
 
 - Compile e rode a simulação no Wokwi. Verifique o console serial para logs MQTT e leitura do sensor.
