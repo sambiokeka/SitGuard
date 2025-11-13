@@ -89,50 +89,26 @@ distancia_cm: número (cm)
 
 ## Como rodar (Passo a passo)
 
-### 1) Hardware (Wokwi / ESP32)
-- Abra o projeto no Wokwi (cole o link do seu projeto Wokwi).
-- No código .ino altere:
+1) Hardware (Wokwi / ESP32)  
+- Abra o projeto no Wokwi:  
+  https://wokwi.com/projects/447550415358261249
+
+- No código `.ino` altere a variável `mqtt_server`:
 ```cpp
-const char* mqtt_server = "SEU_IP_AQUI"; // IP público/privado do broker (Usei uma VM da Azure)
+const char* mqtt_server = "SEU_IP_AQUI"; // IP público da sua VM Azure
 ```
+
 - Compile e rode a simulação no Wokwi. Verifique o console serial para logs MQTT e leitura do sensor.
 
-### 2) Backend (Flask)
-- Acesse sua VM da Azure (ou só abra sua maquina virtual):
+2) Configuração do Broker Mosquitto (Importante)  
+- Observação importante: versões recentes do Mosquitto desabilitam conexões anônimas por padrão. Como o sketch do ESP32 está configurado para conectar sem autenticação (anônimo), precisamos habilitar conexões anônimas temporariamente ou configurar credenciais no ESP32 e no Mosquitto. Abaixo segue a forma rápida (para testes) de habilitar anônimo via um arquivo de configuração.
+
+- Acesse sua VM da Azure:
 ```bash
 ssh seu_usuario@SEU_IP_AQUI
 ```
 
-- Clone o repositório:
-```bash
-git clone https://github.com/sambiokeka/SitGuard.git
-cd SitGuard
-```
-
-- Instale dependências:
-```bash
-pip install -r requirements.txt
-```
-
-- Rode o servidor:
-```bash
-python3 app.py
-```
-
-Firewall / NSG (Azure):
-- Abra a porta 1883 (MQTT).
-- Abra a porta 8080 (HTTP)
-
-### 3) Frontend (acesso)
-- No navegador, abra:
-```
-http://SEU_IP_AQUI:8080
-```
-- A página `index.html` conecta via Socket.IO e atualiza status/distance em tempo real.
-
-### 4) Caso de erro na porta 1883
-
-- Crie diretório e arquivo de configuração:
+- Crie o diretório e o arquivo de configuração:
 ```bash
 mkdir -p ~/mosquitto && cd ~/mosquitto
 cat > mosquitto.conf <<'EOF'
@@ -140,14 +116,61 @@ listener 1883
 allow_anonymous true
 EOF
 ```
-- Rode o container:
+
+- Rode o container Docker do Mosquitto:
 ```bash
 docker run -itd --name mosquitto -p 1883:1883 -v ~/mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf eclipse-mosquitto
 ```
-- Verifique logs:
+
+- Verifique os logs (opcional, para ver se está funcionando):
 ```bash
 docker logs -f mosquitto
 ```
+
+- Observação de segurança: `allow_anonymous true` é prático para testes, mas inseguro em produção. Em ambientes reais, configure usuários com senha (arquivo de senhas), restrinja acessos e habilite TLS.
+
+3) Backend (Flask)  
+- Na mesma VM, clone o repositório:
+```bash
+git clone https://github.com/sambiokeka/SitGuard.git
+cd SitGuard
+```
+
+- É recomendado criar um virtualenv:
+```bash
+python3 -m venv venv
+source venv/bin/activate
+```
+
+- Instale as dependências:
+```bash
+pip install -r requirements.txt
+```
+(se não houver `requirements.txt`, instale manualmente: `pip install flask flask-socketio paho-mqtt eventlet`)
+
+- Ajuste as configurações no `app.py` conforme necessário:
+  - Endereço do broker MQTT (`mqtt_broker = "localhost"` ou IP da VM).
+  - Porta do Flask (p.ex. 8080).
+
+- Rode o servidor Flask:
+```bash
+python3 app.py
+```
+Para produção, use gunicorn + eventlet:
+```bash
+gunicorn -k eventlet -w 1 app:app --bind 0.0.0.0:8080
+```
+
+- Firewall / NSG (Azure): No Portal do Azure, abra o Grupo de Segurança de Rede (NSG) da sua VM e adicione regras de entrada para:
+  - Porta 1883 (Protocolo TCP) → Para o Mosquitto/MQTT  
+  - Porta 8080 (Protocolo TCP) → Para o Flask/HTTP
+
+4) Frontend (Acesso)  
+- No seu navegador, abra:
+```
+http://SEU_IP_AQUI:8080
+```
+- A página `index.html` deve carregar e se conectar automaticamente via Socket.IO, exibindo os dados da sua simulação Wokwi em tempo real.
 
 ---
 
@@ -170,5 +193,6 @@ payload: {"status":"ruim","distancia_cm":22.3}
 - diagram.json         → Diagrama de montagem para o wokwi
 - app.py               → Aqui tem o codigo que deve ser rodado na VM
 - /templates/          → index.html
+- requirements.txt
 - README.md
 
