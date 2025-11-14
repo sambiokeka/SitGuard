@@ -11,7 +11,7 @@ Um projeto completo para monitorar a postura de quem está sentado à mesa usand
 - Erick Jooji Bertassoli Yamashita - RM: 564482
 - Links úteis:
   - Projeto Wokwi: https://wokwi.com/projects/447550415358261249
-  - Vídeo explicativo: 
+  - Vídeo explicativo: https://youtu.be/Fl-g5QB53fU
 
 ---
 
