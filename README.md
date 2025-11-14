@@ -4,6 +4,9 @@ Um projeto completo para monitorar a postura de quem está sentado à mesa usand
 
 (simulação Wokwi + backend Flask + Mosquitto)
 
+<img width="499" height="273" alt="image" src="https://github.com/user-attachments/assets/3adefbd8-7626-4ae1-8ae9-d48452940947" />
+
+
 ## Integrantes
 - Erick Jooji Bertassoli Yamashita - RM: 564482
 - Links úteis:
